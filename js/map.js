@@ -3,17 +3,53 @@
   var mapPinMain = map.querySelector('.map__pin--main');
   var adFormAddress = document.querySelector('.ad-form').querySelector('#address');
   var mapPins = document.querySelector('.map').querySelector('.map__pins');
+  var typeFilter = document.querySelector('#housing-type');
+  var URL = '../data.txt';
+  var json = [];
 
   var MAP_WIDTH = mapPins.clientWidth;
   var MAP_HEIGHT = mapPins.clientHeight;
 
   var onRemoveFaded = function() {
-    var pins = window.pin.makePins();
 
     map.classList.remove('map--faded');
-    window.pin.drawPins(pins);
-    window.card.renderCard(pins);
     window.form.enabledForm();
+    window.load(URL, onSuccess, onError);
+  };
+
+  var filterPins = function (type) {
+    var filter  = json.filter(function (it) {
+      return it.offer.type === type;
+    });
+    return filter;
+  };
+
+  var removePins = function () {
+    var mapPins = map.querySelectorAll('.map__pin:not(.map__pin--main)');
+
+    mapPins.forEach(function (it) {
+      it.remove();
+    });
+  };
+
+  var updatePins = function (evt) {
+    removePins();
+    window.pin.drawPins(filterPins(evt.target.value));
+    removeMapCard();
+  };
+
+  var onSuccess = function (data) {
+    json = data;
+    window.pin.drawPins(json);
+  };
+
+  var onError = function (error) {
+    var main = document.querySelector('main');
+    var temlate = document.querySelector('#error').content.querySelector('.error').cloneNode(true);
+    var message = temlate.querySelector('.error__message');
+
+    message.textContent = error;
+    main.appendChild(temlate);
   };
 
   mapPinMain.addEventListener('mousedown', onRemoveFaded);
@@ -70,4 +106,6 @@
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   });
+
+  typeFilter.addEventListener('change', updatePins);
 })();
